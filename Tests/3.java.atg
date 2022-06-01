@@ -1,0 +1,241 @@
+COMPILER MyCOCOR
+(.//Especificacion de Funciones.)
+CHARACTERS
+
+(.//Especificacion de Characters.)
+letter= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
+digit= "0123456789".
+cr = CHR(13).
+lf = CHR(10).
+tab = CHR(9).
+ignore = cr+lf+tab.
+comillas = CHR(34).
+stringletter = ANY-comillas-ignore.
+operadores ="+-=()[]{}|.<>".
+MyANY = ANY-operadores.
+
+TOKENS
+(.//Especificacion de Tokens.)
+
+ident = letter{letter|digit} EXCEPT KEYWORDS.
+string = comillas stringletter{stringletter} comillas.
+
+char = "'"["/"]letter"'".
+charnumber = "CHR("digit{digit}")".
+charinterval = "CHR("digit{digit}")""..""CHR("digit{digit}")".
+
+nontoken = MyANY.
+startcode ="(.".
+endcode=".)".
+
+IGNORE ignore.
+
+PRODUCTIONS
+(.//Especificacion de Productions.)
+
+MyCOCOR = 					(.CompilerName, EndName = "","".)
+	["COMPILER" ]
+	Ident<CompilerName>		(.print("Nombre Inicial del Compilador ", CompilerName).) 
+	[Codigo]
+	Body
+	["END"] Ident<EndName>		(.print("Nombre Final del Compilador: ",EndName).) 
+.
+
+Body = 
+	[Characters ]
+	[Keywords] 
+	[Tokens]
+	[Productions]	
+.
+
+
+Characters =				(.CharName, Counter = "",0.)
+	["CHARACTERS"]			(.print("LEYENDO CHARACTERS").)
+	[Codigo]
+	{
+		Ident<CharName>		(.Counter+=1; print("Char Set ", Counter , " : ",CharName).)
+		["="]
+		CharSet	
+		(
+			["+"]CharSet
+			|
+			["-"]CharSet
+		)
+		["."]
+	}
+.
+			 
+Keywords = 				(.KeyName,StringValue,Counter = "","",0.)
+
+	["KEYWORDS"]			(.print("LEYENDO KEYWORDS").)
+	{
+		
+		Ident<KeyName>	(.Counter+=1;print("KeyWord ", Counter, " : ",KeyName).)
+		["="]
+		String<StringValue>
+		"."
+	}
+
+.
+
+
+Tokens =				(.TokenName, Counter = "", 0;.)
+	
+	["TOKENS"]			(.print("LEYENDO TOKENS").)
+	[Codigo]
+	{
+		Ident<TokenName>	(.Counter+=1;print("Token ", Counter,  " : ",TokenName).)
+		["="]
+		TokenExpr
+		[ExceptKeyword]
+		"."
+
+	}
+
+.
+
+
+Productions = 				(.Counter = 0.)
+	
+	["PRODUCTIONS"]			(.ProdName = " "; print("LEYENDO PRODUCTIONS").)
+	[Codigo]
+	{
+		Ident<ProdName>		(.Counter+=1; print("Production " ,Counter, " : " ,ProdName).)
+		[Atributos]
+		["="]
+		[Codigo]
+		ProductionExpr
+		"."
+
+	}
+.
+
+ExceptKeyword= 
+	["EXCEPT"]
+	"KEYWORDS"
+.
+
+
+ProductionExpr =
+	ProdTerm
+	{
+	"|"
+	ProdTerm
+	}
+.
+
+ProdTerm =
+	ProdFactor
+	{
+	ProdFactor
+	}
+.
+
+ProdFactor =
+	(
+	SymbolProd
+	|
+	["("]ProductionExpr[")"]
+	|
+	["["]ProductionExpr["]"]
+	|
+	["{"]ProductionExpr["}"]
+	)
+	[Codigo]
+.
+
+
+
+SymbolProd =			(.SV, IN = "","";.)
+	(
+	String<SV>		(.print("String en Production: ",SV).)
+	|
+	char
+	|
+	Ident<IN>		(.print("Identificador en Production: ",IN).)
+	[Atributos] 
+	)
+.
+
+Codigo =
+	startcode
+	{ ANY }
+	endcode
+.
+
+Atributos =
+	"<"
+	{ANY}
+	">"
+.
+
+TokenExpr=
+	TokenTerm
+	{
+	"|"
+	TokenTerm
+	}
+.
+
+TokenTerm=
+	TokenFactor
+	{
+	TokenFactor	
+	}
+.
+
+TokenFactor=
+	(
+	SimbolToken
+	|
+	["("]TokenExpr[")"]
+	|
+	["["]TokenExpr["]"]
+	)
+.
+
+SimbolToken =			(.IdentName, StringValue = "", "".)		
+	(
+	String<StringValue>
+	|
+	char
+	|
+	Ident<IdentName>	(.print("Identificador en Token: ",IdentName).)
+	)
+.
+
+
+
+CharSet= 			(.IdentName, StringValue = "","".)	
+	(
+	String<StringValue>
+	|
+	Char
+	|
+	"ANY"
+	|
+	Ident<IdentName>	(.print("Identificador en CharSet: ",IdentName).)
+	)
+	
+.
+
+
+Char=
+	(
+	char
+	|
+	charnumber
+	|
+	charinterval
+	)
+.
+
+String=
+	string		(.return self.currentToken.value.)
+.
+
+Ident=
+	ident		(.return self.currentToken.value.)
+.
+
+END MyCOCOR

@@ -1,0 +1,62 @@
+COMPILER Double    
+(.//Especificacion de Functions.)
+
+CHARACTERS 
+(.//Especificacion de Characters.)
+
+digit="0123456789".
+tab=CHR(9).
+eol=CHR(10).
+blanco = eol+CHR(13)+tab.
+
+KEYWORDS
+(.//Especificacion de Keywords.)
+cocol = 'cocol'.
+
+TOKENS
+(.//Especificacion de Tokens.)
+
+number = digit{digit}.
+decnumber = digit{digit}"."digit{digit}.
+white = blanco{blanco}.
+
+PRODUCTIONS
+(.//Especificacion de Productions.)
+
+
+Expr= {Stat ";"{white}}{white}".".
+
+Stat = 								(.value=0.)
+	Expression<value>				(.print("Resultado: ",value);.)
+	.
+
+Expression<result> =				(.result1,result2 = 0,0.)
+	Term<result1>
+	{    "+"Term<result2>			(.result1+=result2;.)
+	   | "-"Term<result2>			(.result1-=result2;.)
+	}								(.return result1;.)
+	.
+
+Term<result>=						(.result1,result2=0,0;.)
+	Factor<result1>
+	{    "*"Factor<result2>			(.result1*=result2.)
+	   | "/"Factor<result2>			(.result1/=result2.)
+	}								(.return result1.)
+	.
+
+
+Factor<result> =					(.sign=1;.)
+	["-"							(.sign = -1;.)
+	]
+	(Number<result>
+	 |"("Expression<result>")"
+	)								(.return result*sign;.)
+	.
+
+Number<result> =	
+	(
+	number				
+	|
+	decnumber)						(.return float(self.lastvalue).)
+	.
+END Double

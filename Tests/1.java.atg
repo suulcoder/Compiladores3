@@ -1,0 +1,55 @@
+COMPILER Aritmetica    
+(.//Especificacion de Funciones.)
+
+CHARACTERS 
+(.//Especificacion de Characters.)
+letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz". 
+digit = "0123456789".
+tab = CHR(9).
+eol = CHR(10).
+
+KEYWORDS
+(.//Especificacion de Keywords.)
+cocol = 'cocol'.
+
+TOKENS
+(.//Especificacion de Tokens.)
+
+ident = letter{letter|digit} EXCEPT KEYWORDS.
+number = digit{digit}.
+
+PRODUCTIONS
+(.//Especificacion de Productions.)
+
+Expr= {Stat ";"}".".
+
+Stat = 							(.value=0;.)
+	Expression<value>			(.print(value).)
+	.
+
+Expression<result> =			(.result1,result2 = 0,0;.)
+	Term<result1>
+	{    "+"Term<result2>		(.result1+=result2.)
+	   | "-"Term<result2>		(.result1-=result2.)
+	}							(.return result1.)
+	.
+
+Term<result>=					(.result1,result2 = 0,0;.)
+	Factor<result1>
+	{    "*"Factor<result2>	(.result1*=result2.)
+	   | "/"Factor<result2>	(.result1/=result2.)
+	}							(.return result1.)
+	.
+	
+Factor<result> =				(.signo=1;.)
+	[
+		"-"						(.signo = -1;.)
+	]
+	( Number<result> | 
+	 "("Expression<result>")") 	(.return result*signo.)
+	.
+	
+Number<result> =  number 		(.return int(self.lastvalue).)
+.
+
+END Aritmetica
