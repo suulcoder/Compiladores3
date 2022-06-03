@@ -49,31 +49,30 @@ Body =
 .
 
 
-Characters =				(.CharName, Counter = "",0.)
-	["CHARACTERS"]			(.print("LEYENDO CHARACTERS").)
-	[Codigo]
+Characters =				(.CharName, Counter = '',0.)
+	["CHARACTERS"]			(.print('LEYENDO CHARACTERS').)
 	{
-		Ident<CharName>		(.Counter+=1; print("Char Set ", Counter , " : ",CharName).)
+		(Ident<CharName>		
 		["="]
 		CharSet	
 		(
-			["+"]CharSet
+			(["+"]CharSet)
 			|
-			["-"]CharSet
+			(["-"]CharSet)
 		)
-		["."]
-	}
+		["."])
+	}						(.Counter+=1; print("Char Set ", Counter , " : ",CharName).)
 .
 			 
-Keywords = 				(.KeyName,StringValue,Counter = "","",0.)
+Keywords = 				(.KeyName,StringValue,Counter = '','',0.)
 
-	["KEYWORDS"]			(.print("LEYENDO KEYWORDS").)
+	["KEYWORDS"]			(.print('LEYENDO KEYWORDS').)
 	{
 		
-		Ident<KeyName>	(.Counter+=1;print("KeyWord ", Counter, " : ",KeyName).)
+		(Ident<KeyName>	(.Counter+=1;print("KeyWord ", Counter, " : ",KeyName).)
 		["="]
 		String<StringValue>
-		"."
+		".")
 	}
 
 .
@@ -84,11 +83,11 @@ Tokens =				(.TokenName, Counter = "", 0;.)
 	["TOKENS"]			(.print("LEYENDO TOKENS").)
 	[Codigo]
 	{
-		Ident<TokenName>	(.Counter+=1;print("Token ", Counter,  " : ",TokenName).)
+		(Ident<TokenName>	(.Counter+=1;print("Token ", Counter,  " : ",TokenName).)
 		["="]
 		TokenExpr
 		[ExceptKeyword]
-		"."
+		".")
 
 	}
 
@@ -100,12 +99,12 @@ Productions = 				(.Counter = 0.)
 	["PRODUCTIONS"]			(.ProdName = " "; print("LEYENDO PRODUCTIONS").)
 	[Codigo]
 	{
-		Ident<ProdName>		(.Counter+=1; print("Production " ,Counter, " : " ,ProdName).)
+		(Ident<ProdName>		(.Counter+=1; print("Production " ,Counter, " : " ,ProdName).)
 		[Atributos]
 		["="]
 		[Codigo]
 		ProductionExpr
-		"."
+		".")
 
 	}
 .

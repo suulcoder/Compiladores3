@@ -1,7 +1,7 @@
 ### Disenio de Lenguajes de Programacion
 ### Saul Contreras
 
-import bridge
+import utils
 import sys
 import copy
 import pickle
@@ -567,5 +567,5 @@ for regex in dictTokens.values():
 
 expresion = expresion[:-1]
 
-### Mandamos a llamar al bridge para que construya el Scanner con la expresion formada a partir de Tokens
-bridge.automata(expresion, dictTokens, dictKeywords, whiteSpace)
+### Mandamos a llamar al utils para que construya el Scanner con la expresion formada a partir de Tokens
+utils.automata(expresion, dictTokens, dictKeywords, whiteSpace)

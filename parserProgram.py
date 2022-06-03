@@ -24,8 +24,8 @@ class Parser():
     def expect(self, terminal):
         if self.currentToken == terminal:
             self.get()
-        else:
-            self.error('SINTAX ERROR')
+        elif(self.currentToken != None and terminal!=None and terminal!='white'):
+            print('Sintax error: Expected value is ' + self.currentToken + ', Actual value is: ' + terminal)
 
     def get(self):
         if self.posicion - 1 < 0:
@@ -45,72 +45,213 @@ class Parser():
             self.nextToken = self.tokens[self.posicion]
 
     def parser(self):
-        self.Expr()
+        self.MyCOCOR()
 
-    def Expr(self):
-        while self.currentToken in ['token4', 'number', 'token7']:
-        	if self.currentToken in ['token4', 'number', 'token7']:
-        		self.Stat()
-        		if self.currentToken == "token1":
-        			self.expect("token1")
-        if self.currentToken == "token2":
-        	self.expect("token2")
+    def MyCOCOR(self):
+        CompilerName, EndName = "",""
+        self.expect("token1")
+        if self.currentToken in ['ident']:
+        	CompilerName = self.Ident(CompilerName)
+        	print("Nombre Inicial del Compilador ", CompilerName)
+        	self.expect("Codigo")
+        self.Body()
+        self.expect("token2")
+        if self.currentToken in ['ident']:
+        	EndName = self.Ident(EndName)
+        print("Nombre Final del Compilador: ",EndName)
 
-    def Stat(self):
-        value=0;
-        value = self.Expression(value)
-        print(value)
+    def Body(self):
+        self.expect("Characters")
+        self.expect("Keywords")
+        self.expect("Tokens")
+        self.expect("Productions")
 
-    def Expression(self, result):
-        result1,result2 = 0,0;
-        result1 = self.Term(result1)
-        while self.currentToken in ['token3', 'token4']:
-        	if self.currentToken == "token3":
-        		self.expect("token3")
-        		result2 = self.Term(result2)
-        		result1+=result2
-        	else:
-        		if self.currentToken == "token4":
-        			self.expect("token4")
-        			result2 = self.Term(result2)
-        			result1-=result2
-        return result1
-
-    def Term(self, result):
-        result1,result2 = 0,0;
-        result1 = self.Factor(result1)
-        while self.currentToken in ['token5', 'token6']:
-        	if self.currentToken == "token5":
-        		self.expect("token5")
-        		result2 = self.Factor(result2)
-        		result1*=result2
-        	else:
-        		if self.currentToken == "token6":
-        			self.expect("token6")
-        			result2 = self.Factor(result2)
-        			result1/=result2
-        return result1
-
-    def Factor(self, result):
-        signo=1;
-        if self.currentToken in ['token4']:
-        	if self.currentToken == "token4":
+    def Characters(self):
+        while self.currentToken in []:
+        	CharName, Counter = '',0
+        	self.expect("token3")
+        		print('LEYENDO CHARACTERS')
+        	if self.currentToken in ['ident']:
+        		CharName = self.Ident(CharName)
         		self.expect("token4")
-        		signo = -1;
-        if self.currentToken in ['number']:
-        	result = self.Number(result)
-        else:
+        	else:
+        	if self.currentToken in ['string', 'char', 'charnumber', 'charinterval', 'token21', 'ident']:
+        		self.CharSet()
+        		self.expect("token5")
+        	self.CharSet()
+        	self.expect("token6")
+        	self.CharSet()
+        	self.expect("token7")
+        Counter+=1; print("Char Set ", Counter , " : ",CharName)
+
+    def Keywords(self):
+        KeyName,StringValue,Counter = '','',0
+        self.expect("token8")
+        while self.currentToken in []:
+        		print('LEYENDO KEYWORDS')
+        	if self.currentToken in ['ident']:
+        		KeyName = self.Ident(KeyName)
+        		Counter+=1;print("KeyWord ", Counter, " : ",KeyName)
+        		self.expect("token4")
+        		if self.currentToken in ['string']:
+        			StringValue = self.String(StringValue)
+        			if self.currentToken == "token7":
+        				self.expect("token7")
+
+    def Tokens(self):
+        while self.currentToken in []:
+        	TokenName, Counter = "", 0;
+        	self.expect("token9")
+        	print("LEYENDO TOKENS")
+        	self.expect("Codigo")
+        	if self.currentToken in ['ident']:
+        		TokenName = self.Ident(TokenName)
+        	Counter+=1;print("Token ", Counter,  " : ",TokenName)
+        	self.expect("token4")
+        	self.TokenExpr()
+        	self.expect("ExceptKeyword")
+        	self.expect("token7")
+
+    def Productions(self):
+        while self.currentToken in []:
+        	Counter = 0
+        	self.expect("token10")
+        	ProdName = " "; print("LEYENDO PRODUCTIONS")
+        	self.expect("Codigo")
+        	if self.currentToken in ['ident']:
+        		ProdName = self.Ident(ProdName)
+        	Counter+=1; print("Production " ,Counter, " : " ,ProdName)
+        	self.expect("Atributos")
+        	self.expect("token4")
+        	self.expect("Codigo")
+        	if self.currentToken in ['string', 'char', 'ident', 'token13', 'token15', 'token17']:
+        		self.ProductionExpr()
         	if self.currentToken == "token7":
         		self.expect("token7")
-        		result = self.Expression(result)
-        		if self.currentToken == "token8":
-        			self.expect("token8")
-        return result*signo
 
-    def Number(self, result):
-        if self.currentToken == "number":
-        	self.expect("number")
-        	return int(self.lastvalue)
+    def ExceptKeyword(self):
+        self.expect("token11")
+        self.expect("token8")
+
+    def ProductionExpr(self):
+        	self.ProdTerm()
+        while self.currentToken in ['token12']:
+        	if self.currentToken == "token12":
+        		self.expect("token12")
+        		self.ProdTerm()
+
+    def ProdTerm(self):
+        	self.ProdFactor()
+        	self.expect("ProdFactor")
+
+    def ProdFactor(self):
+        else:
+        else:
+        else:
+        if self.currentToken in ['string', 'char', 'ident']:
+        	self.SymbolProd()
+        self.expect("token13")
+        self.ProductionExpr()
+        self.expect("token14")
+        self.expect("token15")
+        self.ProductionExpr()
+        self.expect("token16")
+        self.expect("token17")
+        self.ProductionExpr()
+        self.expect("token18")
+        self.expect("Codigo")
+
+    def SymbolProd(self):
+        else:
+        	if self.currentToken in ['string']:
+        		SV = self.String(SV)
+        		print("String en Production: ",SV)
+        	else:
+        		if self.currentToken == "char":
+        			self.expect("char")
+        	if self.currentToken in ['ident']:
+        		IN = self.Ident(IN)
+        		print("Identificador en Production: ",IN)
+        self.expect("Atributos")
+
+    def Codigo(self):
+        self.expect("startcode")
+        self.expect("ANY")
+        self.expect("endcode")
+
+    def Atributos(self):
+        self.expect("token19")
+        self.expect("ANY")
+        self.expect("token20")
+
+    def TokenExpr(self):
+        	self.TokenTerm()
+        while self.currentToken in ['token12']:
+        	if self.currentToken == "token12":
+        		self.expect("token12")
+        		self.TokenTerm()
+
+    def TokenTerm(self):
+        	self.TokenFactor()
+        	self.expect("TokenFactor")
+
+    def TokenFactor(self):
+        else:
+        else:
+        if self.currentToken in ['string', 'char', 'ident']:
+        	self.SimbolToken()
+        self.expect("token13")
+        self.TokenExpr()
+        self.expect("token14")
+        self.expect("token15")
+        self.TokenExpr()
+        self.expect("token16")
+
+    def SimbolToken(self):
+        IdentName, StringValue = "", ""
+        if self.currentToken in ['string']:
+        	StringValue = self.String(StringValue)
+        else:
+        	if self.currentToken == "char":
+        		self.expect("char")
+        else:
+        if self.currentToken in ['ident']:
+        	IdentName = self.Ident(IdentName)
+        	print("Identificador en Token: ",IdentName)
+
+    def CharSet(self):
+        IdentName, StringValue = "",""
+        if self.currentToken in ['string']:
+        	StringValue = self.String(StringValue)
+        else:
+        	if self.currentToken in ['char', 'charnumber', 'charinterval']:
+        		self.Char()
+        else:
+        if self.currentToken == "token21":
+        	self.expect("token21")
+        else:
+        if self.currentToken in ['ident']:
+        	IdentName = self.Ident(IdentName)
+        print("Identificador en CharSet: ",IdentName)
+
+    def Char(self):
+        if self.currentToken == "char":
+        	self.expect("char")
+        elif self.currentToken == "charnumber":
+        	self.expect("charnumber")
+        else:
+        if self.currentToken == "charinterval":
+        	self.expect("charinterval")
+
+    def String(self):
+        if self.currentToken == "string":
+        	self.expect("string")
+        	return self.currentToken.value
+
+    def Ident(self):
+        if self.currentToken == "ident":
+        	self.expect("ident")
+        	return self.currentToken.value
 
 ### Lectura de pickle del Automata Serializado
 with open('Pickle/tokensScanner.pickle', 'rb') as f:

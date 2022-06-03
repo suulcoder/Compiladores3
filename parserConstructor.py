@@ -3,7 +3,7 @@
 
 ### Programa parserContructor que permite la creacion del programa Parser
 import pickle
-import bridge
+import utils
 import copy
 
 ### Constantes
@@ -169,10 +169,10 @@ def contruirParser(productionsTokens, productionsList, dictPrimero, tokensExtras
         tokensProduccion = []
         ### Conversion a estructura TOKEN
         for j in elementosProduccion[i]:
-            t = bridge.Token(j[0], j[1])
+            t = utils.Token(j[0], j[1])
             tokensProduccion.append(t)
         ### Procesamiento de los TOKENS para formal el ARBOL
-        raiz = bridge.constructorArbol(tokensProduccion, dictPrimero)
+        raiz = utils.constructorArbol(tokensProduccion, dictPrimero)
 
         ### Procesamiento de los argumentos a funcion
         argumentosFuncion = ''
@@ -204,6 +204,7 @@ parser.parser()'''
 ### Lectura de pickle de la definicion de PRODUCTIONS Serializado
 with open('Pickle/productions.pickle', 'rb') as f:
     productionsTokens = pickle.load(f)
+    
 
 ### Variables para nuestro programa
 productionsList = []
@@ -236,8 +237,8 @@ class Parser():
     def expect(self, terminal):
         if self.currentToken == terminal:
             self.get()
-        else:
-            self.error('SINTAX ERROR')
+        elif(self.currentToken != None and terminal!=None and terminal!='white'):
+            print('Sintax error: Expected value is ' + self.currentToken + ', Actual value is: ' + terminal)
 
     def get(self):
         if self.posicion - 1 < 0:
