@@ -131,13 +131,13 @@ def processCharacter(setCharacter, dictCharacters):
                     for j in range(0,len(setCharacter)-i-4):
                         saltos = saltos + 1
                         if setCharacter[i+j+4] == ')':
-                            caracter = setCharacter[i+4:i+j+4]
+                            character = setCharacter[i+4:i+j+4]
 
-                            if caracter:
+                            if character:
                                 if signo:
-                                    set2.add(int(caracter))
+                                    set2.add(int(character))
                                 else:
-                                    set1.add(int(caracter))
+                                    set1.add(int(character))
                             break
                 
                 else:
@@ -232,67 +232,54 @@ def processToken(setTokens, dictCharacters):
 
     return expresionRegular, bandera
 
-def tokenizacionProducciones(producciones):
-    listaProducciones = []
+def getProductionTokens(producciones):
+    list_productions = []
 
-    ### Lectura de pickle del Automata Serializado
-    with open('Pickle/automataCocol.pickle', 'rb') as f:
-        afdd = pickle.load(f)
-
-    ### Lectura de pickle de la definicion de TOKENS Serializado
-    with open('Pickle/tokensCocol.pickle', 'rb') as f:
+    with open('Pickle/cocol.pickle', 'rb') as f:
         tokens = pickle.load(f)
-
-    ### Lectura de pickle de la definicion de TOKENS Serializado
-    with open('Pickle/keywordsCocol.pickle', 'rb') as f:
-        keywords = pickle.load(f)
-
-    ### Lectura de pickle de la definicion de IGNORE Serializado
-    with open('Pickle/ignoreCocol.pickle', 'rb') as f:
+    with open('Pickle/ingore.pickle', 'rb') as f:
         ignoreSet = pickle.load(f)
+    with open('Pickle/automata.pickle', 'rb') as f:
+        afdd = pickle.load(f)
+    with open('Pickle/keywords.pickle', 'rb') as f:
+        keywords = pickle.load(f)
 
     ### Se revisa cada una de las producciones
     for produccion in producciones:
-        tokensList = []
+        list_tokens = []
 
         ### Ahora pasamos el string a la simulacion
         posicion = 0
         while posicion < len(produccion):
-            token, posicion, cadenaRetornar = simulaciones.simulacionAFD2(afdd, produccion, posicion, tokens, ignoreSet)
+            token, posicion, toReturn = simulaciones.simulacionAFD2(afdd, produccion, posicion, tokens, ignoreSet)
 
             ### Se limpia la cadena a retornar de los ignores
-            cadenaFinal = ''
-            for caracter in cadenaRetornar:
+            last_string = ''
+            for character in toReturn:
                 if ignoreSet:
-                    caracterAscii = ord(caracter)
-                    if caracterAscii in ignoreSet:
+                    characterAscii = ord(character)
+                    if characterAscii in ignoreSet:
                         continue
-                cadenaFinal = cadenaFinal + caracter
+                last_string = last_string + character
 
             if token:
-                ### Se obtiene el valor de la bandera del token
                 valorToken = tokens[token]
                 valorBandera = valorToken[1]
 
-                ### Revisar el valor de la bandera
-                if (valorBandera == 1) and (cadenaFinal in keywords.values()):
-                    llave = [key for key, value in keywords.items() if value == cadenaFinal]
-                    tokensList.append([llave[0], cadenaFinal])
+                if (valorBandera == 1) and (last_string in keywords.values()):
+                    key = [key for key, value in keywords.items() if value == last_string]
+                    list_tokens.append([key[0], last_string])
                 else:
-                    tokensList.append([token, cadenaFinal])
+                    list_tokens.append([token, last_string])
             else:
                 pass
 
-        ### Se elimina el primer elemento que es el IDENTIFICADOR de la PRODUCCION
-        tokenCopy = copy.deepcopy(tokensList)
-
-        ### Se genera el diccionario de la PRODUCCION
-        #diccionarioProducciones[tokensList[0][1]] = tokenCopy
-        for token in tokenCopy:
-            listaProducciones.append((token[0], token[1]))
+        _token = copy.deepcopy(list_tokens)
+        for token in _token:
+            list_productions.append((token[0], token[1]))
 
     ### Se devuelven las PRODUCCIONES
-    return listaProducciones
+    return list_productions
 
 ###-------------------------MAIN---------------------------###
 ### Se solicita el nombre del archivo
@@ -320,7 +307,7 @@ listProductions = []
 whiteSpace = None
 
 pilaComentario = ''
-lineaAnterior = ''
+last_line = ''
 contador = 0
 
 ### Agregamos la definicion de ANY a los CHARACTERS
@@ -443,7 +430,7 @@ for linea in lineas:
         continue
 
     ### Concatenar linea anterior
-    linea = lineaAnterior + linea.strip('\n').strip('\t').strip()
+    linea = last_line + linea.strip('\n').strip('\t').strip()
 
     contador = contador + 1
 
@@ -452,7 +439,7 @@ for linea in lineas:
     if readCharacters:
         ### Revisar si la linea termina con punto
         if linea.strip('\n').strip('\t').strip()[-1] != DOT:
-            lineaAnterior = linea.strip('\n').strip('\t').strip()
+            last_line = linea.strip('\n').strip('\t').strip()
             continue
 
         ### Extraer el ident y el SET
@@ -463,7 +450,7 @@ for linea in lineas:
 
         ### Ingresar al diccionario si termina con un punto
         if setCharacter[-1] == DOT:
-            lineaAnterior = ''
+            last_line = ''
 
             ### Procesar el SET
             setCharacter = processCharacter(setCharacter, dictCharacters)
@@ -472,7 +459,7 @@ for linea in lineas:
             dictCharacters[identCharacter] = setCharacter
 
         else:
-            lineaAnterior = linea.strip('\n').strip('\t').strip()
+            last_line = linea.strip('\n').strip('\t').strip()
 
         continue
 
@@ -480,7 +467,7 @@ for linea in lineas:
     if readKeywords:
         ### Revisar si la linea termina con punto
         if linea.strip('\n').strip('\t').strip()[-1] != DOT:
-            lineaAnterior = linea.strip('\n').strip('\t').strip()
+            last_line = linea.strip('\n').strip('\t').strip()
             continue
 
         ### Extraer el ident y el SET
@@ -491,17 +478,17 @@ for linea in lineas:
 
         ### Ingresar al diccionario si termina con un punto
         if setKeyword[-1] == DOT:
-            lineaAnterior = ''
+            last_line = ''
             dictKeywords[identKeyword] = setKeyword[:-1]
         else:
-            lineaAnterior = linea.strip('\n').strip('\t').strip()
+            last_line = linea.strip('\n').strip('\t').strip()
 
         continue
     ### Si estoy leyendo TOKENS los proceso como corresponde
     if readTokens:
         ### Revisar si la linea termina con punto
         if linea.strip('\n').strip('\t').strip()[-1] != DOT:
-            lineaAnterior = linea.strip('\n').strip('\t').strip()
+            last_line = linea.strip('\n').strip('\t').strip()
             continue
 
         ### Extraer el ident y el SET
@@ -511,26 +498,24 @@ for linea in lineas:
 
         ### Ingresar al diccionario si termina con un punto
         if setTokens[-1] == DOT:
-            lineaAnterior = ''
+            last_line = ''
 
             ### Procesar el TokenExpr a una expresion regular
             expresionRegular, bandera = processToken(setTokens[:-1], dictCharacters)
 
             dictTokens[identTokens] = [expresionRegular, bandera]
         else:
-            lineaAnterior = linea.strip('\n').strip('\t').strip()
+            last_line = linea.strip('\n').strip('\t').strip()
 
         continue
 
-    ### Si estoy leyendo PRODUCTIONS los proceso como corresponde
     if readProductions:
-        ### Revisar si la linea termina con punto
         if linea.strip('\n').strip('\t').strip()[-1] != DOT:
-            lineaAnterior = linea.strip('\n').strip('\t').strip()
+            last_line = linea.strip('\n').strip('\t').strip()
             continue
         
         listProductions.append(linea.strip('\n').strip('\t').strip().replace('\t', ''))
-        lineaAnterior = ''
+        last_line = ''
 
 ### Revisamos lo obtenido
 # print(dictCharacters)
@@ -539,11 +524,9 @@ for linea in lineas:
 # print(listProductions)
 # print(whiteSpace)
 
-### Hacer uso del proyecto 2 para obtener las PRODUCCIONES como TOKENS
 if listProductions:
-    dictProductions = tokenizacionProducciones(listProductions)
+    dictProductions = getProductionTokens(listProductions)
     
-    ### Serializar las producciones con Pickle
     with open('Pickle/productions.pickle', 'wb') as f:
         pickle.dump(dictProductions, f)
 

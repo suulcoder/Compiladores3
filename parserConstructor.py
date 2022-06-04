@@ -10,7 +10,7 @@ import copy
 espaciadoIndent = '    '
 
 ### Funcion para calcular primero de cada PRODUCCION
-def primerosProduccion(tokensProduccion, noTerminalesList, dictPrimero):
+def primerosProduccion(tokensProduccion, noTerminalesList, primero_dic):
     primeroProduccion = []
     parentesisSimbolo = False
     corcheteSimbolo = False
@@ -38,9 +38,9 @@ def primerosProduccion(tokensProduccion, noTerminalesList, dictPrimero):
                     tokenIdent = False
             else:
                 ### Se revisa si el token es un ident No Terminal
-                if token == 'ident' and value in noTerminalesList and value in dictPrimero:
+                if token == 'ident' and value in noTerminalesList and value in primero_dic:
                     tokenIdent = True
-                    primeroProduccion = primeroProduccion + dictPrimero[value]
+                    primeroProduccion = primeroProduccion + primero_dic[value]
                 ### Se revisa si el token es un ident Terminal
                 elif token == 'ident' and value not in noTerminalesList:
                     tokenIdent = True
@@ -54,7 +54,7 @@ def primerosProduccion(tokensProduccion, noTerminalesList, dictPrimero):
         elif corcheteSimbolo:
             ### Se revisa si el token es un ident No Terminal
             if token == 'ident' and value in noTerminalesList:
-                primeroProduccion = primeroProduccion + dictPrimero[value]
+                primeroProduccion = primeroProduccion + primero_dic[value]
             ### Se revisa si el token es un ident Terminal
             elif token == 'ident' and value not in noTerminalesList:
                 primeroProduccion.append(value)
@@ -65,7 +65,7 @@ def primerosProduccion(tokensProduccion, noTerminalesList, dictPrimero):
         ### Si los token no tienen agrupacion se revisa directamente
         ### Se revisa si el token es un ident No Terminal
         elif token == 'ident' and value in noTerminalesList:
-            primeroProduccion = primeroProduccion + dictPrimero[value]
+            primeroProduccion = primeroProduccion + primero_dic[value]
             break
         ### Se revisa si el token es un ident Terminal
         elif token == 'ident' and value not in noTerminalesList:
@@ -86,109 +86,97 @@ def primerosProduccion(tokensProduccion, noTerminalesList, dictPrimero):
     return primeroProduccion
 
 ### Funcion para poder construir el parser
-def contruirParser(productionsTokens, productionsList, dictPrimero, tokensExtras, contadorExtras, codigoParser):
-    ### Se inicializan las variables para poder procesar las funciones con el ARBOL SINTACTICO
-    palabrasNoTeminales = []
+def contruirParser(productionsTokens, list_productions, primero_dic, extras, extra_counters, code):
+    noTerminales = []
     funciones = []
-    argumentos = []
-    elementosProduccion = []
+    args = []
+    prod_elements = []
 
     ### Se obtienen los No Terminales de las producciones
     validador = True
     listaCopy = copy.deepcopy(productionsTokens)
     primerValor = listaCopy.pop(0)
-    tok, valor = [*primerValor]
+    _token, valor = [*primerValor]
     
     ### Obtenemos el primero de los No Terminales
-    palabrasNoTeminales.append(valor)
+    noTerminales.append(valor)
 
-    ### Se itera sobre los tokens de la produccion
     ### Buscando el token que esta despues de un token p_end
     ### Que es el NO TERMINAL
     for i in listaCopy:
         if validador:
-            tok, valor = [*i]
-            if tok == 'p_end':
+            _token, valor = [*i]
+            if _token == 'p_end':
                 validador = False
         else:
-            tok, valor = [*i]
-            palabrasNoTeminales.append(valor)
+            _token, valor = [*i]
+            noTerminales.append(valor)
             validador = True
 
-    ### Se obtienen los argumentos de las funciones de los NO TERMINALES
-    ### Y se obtiene el resto de los tokens que conforman los elementos
-    ### de la produccion
+    ### Se obtienen los args de las funciones de los NO TERMINALES
+    ### Y se obtiene el resto de los tokens que conforman las producciones
     for token in productionsTokens:
         t, v = [*token]
         if t == 'p_end':
-            productionsList.append(funciones)
-
+            list_productions.append(funciones)
             for i in range(len(funciones)):
                 if funciones[i][1] == '=':
                     if len(funciones[:i]) == 2:
-                        argumentos.append(funciones[1:i])
+                        args.append(funciones[1:i])
                     else:
-                        argumentos.append([])
-                    elementosProduccion.append(funciones[i + 1:])
+                        args.append([])
+                    prod_elements.append(funciones[i + 1:])
                     break
             funciones = []
         else:
             funciones.append(token)
 
-    ### Se comienza con el primer NO TERMINAL que es nuestro Simbolo Inicial
-    codigoParser = codigoParser + 'self.' + palabrasNoTeminales[0] + '()'
-
-    ### Se obtienen los tokens que vienen dentro de la produccion como Strings
+    code = code + 'self.' + noTerminales[0] + '()'
     nuevosTokenString = {}
-    for i, item in enumerate(elementosProduccion):
+    for i, item in enumerate(prod_elements):
         for index, exp in enumerate(item):
             if exp[0] == 'string':
                 exprSimple = exp[1][1:-1]
                 if exprSimple not in nuevosTokenString.keys():
-                    name = 'token' + str(contadorExtras)
+                    name = 'token' + str(extra_counters)
                     nuevosTokenString[exprSimple] = name
-                    contadorExtras = contadorExtras + 1
+                    extra_counters = extra_counters + 1
 
-                elementosProduccion[i][index] = ('ident', nuevosTokenString[exprSimple])
+                prod_elements[i][index] = ('ident', nuevosTokenString[exprSimple])
 
-    ### Se obtienen los tokens que vienen como Strings en las producciones
-    tokensExtras = {}
+    extras = {}
     for ident, value in nuevosTokenString.items():
-        tokensExtras[ident] = value
+        extras[ident] = value
 
     ### Se calculan los primeros elementos de cada produccion
-    for i in range(len(elementosProduccion) - 1, 0, -1):
-        listaPrimeros = primerosProduccion(elementosProduccion[i], palabrasNoTeminales, dictPrimero)
-        noterminal1 = palabrasNoTeminales[i]
-        dictPrimero[noterminal1] = listaPrimeros
-
-
-    ### Convertir los Tokens de producciones a una Estructura TOKENS
-    ### Construir el Arbol a partir de los TOKENS de la PRODUCCION
-    for i in range(len(palabrasNoTeminales)):
+    for i in range(len(prod_elements) - 1, 0, -1):
+        listaPrimeros = primerosProduccion(prod_elements[i], noTerminales, primero_dic)
+        noterminal1 = noTerminales[i]
+        primero_dic[noterminal1] = listaPrimeros
+    for i in range(len(noTerminales)):
         tokensProduccion = []
         ### Conversion a estructura TOKEN
-        for j in elementosProduccion[i]:
+        for j in prod_elements[i]:
             t = utils.Token(j[0], j[1])
             tokensProduccion.append(t)
         ### Procesamiento de los TOKENS para formal el ARBOL
-        raiz = utils.constructorArbol(tokensProduccion, dictPrimero)
+        raiz = utils.constructorArbol(tokensProduccion, primero_dic)
 
-        ### Procesamiento de los argumentos a funcion
-        argumentosFuncion = ''
-        if len(argumentos[i]) > 0:
-            for argumentoLocal in argumentos[i]:
-                argumentosFuncion = ', ' + argumentoLocal[1][1:-1]
+        ### Procesamiento de los args a funcion
+        argsFuncion = ''
+        if len(args[i]) > 0:
+            for argumentoLocal in args[i]:
+                argsFuncion = ', ' + argumentoLocal[1][1:-1]
 
         ### Espaciado de la primer linea de la funcion 
-        codigoParser = codigoParser + '\n\n' + espaciadoIndent
-        ### Definicion de la funcion con argumentos
-        codigoParser = codigoParser + 'def ' + palabrasNoTeminales[i] + '(self' + argumentosFuncion + '):\n'
+        code = code + '\n\n' + espaciadoIndent
+        ### Definicion de la funcion con args
+        code = code + 'def ' + noTerminales[i] + '(self' + argsFuncion + '):\n'
         ### Contruccion de la funcion con los datos del arbol
-        codigoParser = codigoParser + espaciadoIndent*2 + '\n        '.join(raiz[0])
+        code = code + espaciadoIndent*2 + '\n        '.join(raiz[0])
 
     ### Se agrega la lectura de los tokens leidos por el Scanner para que los procese el parser generado
-    codigoParser = codigoParser + '''\n\n### Lectura de pickle del Automata Serializado
+    code = code + '''\n\n### Lectura de pickle del Automata Serializado
 with open('Pickle/tokensScanner.pickle', 'rb') as f:
     tokens = pickle.load(f)
 
@@ -198,7 +186,7 @@ parser = Parser(tokens)
 parser.parser()'''
 
     f = open('parserProgram.py', 'w', encoding='utf-8')
-    f.write(codigoParser)
+    f.write(code)
     f.close()
 
 ### Lectura de pickle de la definicion de PRODUCTIONS Serializado
@@ -207,11 +195,11 @@ with open('Pickle/productions.pickle', 'rb') as f:
     
 
 ### Variables para nuestro programa
-productionsList = []
-dictPrimero = {}
-tokensExtras = {}
-contadorExtras = 1
-codigoParser = '''
+list_productions = []
+primero_dic = {}
+extras = {}
+extra_counters = 1
+code = '''
 ### Disenio de Lenguajes de Programacion
 ### Saul Contreras
 ### Carnet 18409
@@ -261,7 +249,7 @@ class Parser():
         '''
 
 ### Se contruye el Parser
-contruirParser(productionsTokens, productionsList, dictPrimero, tokensExtras, contadorExtras, codigoParser)
+contruirParser(productionsTokens, list_productions, primero_dic, extras, extra_counters, code)
 
 print("""
 
